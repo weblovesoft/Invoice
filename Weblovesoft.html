@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weblovesoft Invoice</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        h2, h3 {
+            text-align: center;
+        }
+        input, textarea, table {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .signature {
+            text-align: right;
+            margin-top: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Weblovesoft Invoice</h2>
+        <p><strong>Company Email:</strong> weblovesoft@gmail.com</p>
+        
+        <h3>Invoice Details</h3>
+        <input type="text" id="clientName" placeholder="Client Name">
+        <input type="text" id="clientEmail" placeholder="Client Email">
+        <input type="date" id="invoiceDate">
+        
+        <h3>Itemized List</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="invoiceItems">
+                <tr>
+                    <td><input type="text" class="desc"></td>
+                    <td><input type="number" class="qty" value="1" min="1"></td>
+                    <td><input type="number" class="price" value="0" min="0"></td>
+                    <td class="itemTotal">0</td>
+                </tr>
+            </tbody>
+        </table>
+        <button onclick="addRow()">Add Item</button>
+        <h3>Grand Total: ₹<span id="grandTotal">0</span></h3>
+        
+        <button onclick="generatePDF()">Download Invoice as PDF</button>
+    </div>
+
+    <script>
+        function addRow() {
+            let table = document.getElementById("invoiceItems");
+            let row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" class="desc"></td>
+                <td><input type="number" class="qty" value="1" min="1" oninput="calculateTotal()"></td>
+                <td><input type="number" class="price" value="0" min="0" oninput="calculateTotal()"></td>
+                <td class="itemTotal">0</td>
+            `;
+        }
+
+        function calculateTotal() {
+            let rows = document.querySelectorAll("#invoiceItems tr");
+            let grandTotal = 0;
+            rows.forEach(row => {
+                let qty = row.querySelector(".qty").value;
+                let price = row.querySelector(".price").value;
+                let total = qty * price;
+                row.querySelector(".itemTotal").textContent = total;
+                grandTotal += total;
+            });
+            document.getElementById("grandTotal").textContent = grandTotal;
+        }
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            let doc = new jsPDF();
+            doc.text("Weblovesoft Invoice", 20, 20);
+            doc.text(`Client: ${document.getElementById("clientName").value}`, 20, 30);
+            doc.text(`Email: ${document.getElementById("clientEmail").value}`, 20, 40);
+            doc.text(`Date: ${document.getElementById("invoiceDate").value}`, 20, 50);
+            
+            let y = 60;
+            doc.text("Description | Quantity | Unit Price | Total", 20, y);
+            y += 10;
+            document.querySelectorAll("#invoiceItems tr").forEach(row => {
+                let desc = row.querySelector(".desc").value;
+                let qty = row.querySelector(".qty").value;
+                let price = row.querySelector(".price").value;
+                let total = qty * price;
+                doc.text(`${desc} | ${qty} | ${price} | ${total}`, 20, y);
+                y += 10;
+            });
+            doc.text(`Grand Total: ₹${document.getElementById("grandTotal").textContent}`, 20, y + 10);
+            doc.save("invoice.pdf");
+        }
+
+        document.addEventListener("input", calculateTotal);
+    </script>
+</body>
+</html>
